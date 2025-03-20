@@ -12,7 +12,7 @@ PAGE_SIZE = 500
 def get_inventory_page(token, page_no=0, page_size=PAGE_SIZE):
     """
     Retrieve a single page of inventory items.
-    Only items that are active and have an inventory of 6 or more are returned.
+    Only items that are active are returned.
     """
     items_url = f"{API_BASE_URL}/item"
     
@@ -25,7 +25,7 @@ def get_inventory_page(token, page_no=0, page_size=PAGE_SIZE):
         "select": "itemcode,sku,name,color,upc,size,sizeNum,ModelCode,GroupCode,active,description,brand,url,images,inventory,prices",
         "page_no": page_no,
         "page_size": page_size,
-        "filter": "(active,eq,true)and(inventory,ge,6)"
+        "filter": "(active,eq,true)and(inventory,ge,0)"
     }
     
     try:
