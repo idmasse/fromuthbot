@@ -1,6 +1,6 @@
 import json
 import requests
-from utils.auth_utils import *
+from utils.auth_utils import get_jwt, API_BASE_URL
 from utils.gsheet_utils import setup_google_sheets
 from dotenv import load_dotenv
 
@@ -18,70 +18,76 @@ def get_order_by_customer_order_number(customer_order_number, headers):
 
 def update_sheet_with_tracking(sheet, headers):
     rows = sheet.get_all_values()  # get all rows from the sheet
+    updated_data = []  # store updated values for batch write to gsheets later
 
-    # loop over each row in the sheet
+    # Loop over each data row (skip header, starting at row 2)
     for i, row in enumerate(rows[1:], start=2):
         customer_order_number = row[0].strip() if len(row) > 0 else ""  # col A: customer order number
         carrier = row[2].strip() if len(row) > 2 else ""                # col C: carrier (shipping method)
-        tracking_number = row[3].strip() if len(row) > 3 else ""        # col D: tracking number
+        tracking_number = row[3].strip() if len(row) > 3 else ""          # col D: tracking number
 
         if customer_order_number and not tracking_number:
             print(f"\nFinding tracking for order number: {customer_order_number}")
             try:
-                #get order details using the customer order number
+                # Get order details using the customer order number
                 order_response = get_order_by_customer_order_number(customer_order_number, headers)
-                
                 print("Full API response:")
                 print(json.dumps(order_response, indent=4))
                 
                 order = order_response.get('_embedded', {}).get('order')
                 if order:
-                    # get tracking numbers from the order
-                    tracking_numbers = order.get("tracking_numbers", [])
-                    
-                    # check document for tracking info
-                    if not tracking_numbers:
-                        documents = order.get("documents", [])
-                        for doc in documents:
-                            tracking = doc.get("tracking")
-                            if tracking:
-                                tracking_numbers.append(tracking)
-                    
-                    print("Extracted tracking_numbers:", tracking_numbers)
-                    
-                    # get the shipping method name from documents
-                    if not carrier:
-                        documents = order.get("documents", [])
-                        for doc in documents:
-                            method = doc.get("shipping_method_name")
-                            if method:
-                                carrier = method
-                                break
-                    
-                    # take the first tracking number
-                    if tracking_numbers:
-                        tracking_number = tracking_numbers[0]
+                    order_state = order.get("state", "")
+                    if order_state.upper() == "CANCELLED":
+                        carrier = "cancelled"
+                        tracking_number = "cancelled"
+                        print(f"Order {customer_order_number} is cancelled. Setting carrier and tracking to 'cancelled'")
                     else:
-                        tracking_number = ""
-                        print(f"No tracking number found for order: {customer_order_number}")
+                        # For non-cancelled orders, process tracking numbers
+                        tracking_numbers = order.get("tracking_numbers", [])
+                        # Check documents for tracking info if none exist
+                        if not tracking_numbers:
+                            for doc in order.get("documents", []):
+                                tracking = doc.get("tracking")
+                                if tracking:
+                                    tracking_numbers.append(tracking)
+                        print("Extracted tracking_numbers:", tracking_numbers)
+                        
+                        # Get the shipping method name from documents if not already set
+                        if not carrier:
+                            for doc in order.get("documents", []):
+                                method = doc.get("shipping_method_name")
+                                if method:
+                                    carrier = method
+                                    break
+                        
+                        # Take the first tracking number if available
+                        if tracking_numbers:
+                            tracking_number = tracking_numbers[0]
+                        else:
+                            tracking_number = ""
+                            print(f"No tracking number found for order: {customer_order_number}")
+                        
+                        # Print order notes for debugging
+                        order_notes = order.get("order_notes", "")
+                        print("Order notes:", order_notes)
                     
-                    # print order notes
-                    order_notes = order.get("order_notes", "")
-                    print("Order notes:", order_notes)
-                    
-                    # update sheet with shipping method and tracking number
-                    sheet.update_cell(i, 3, carrier)       # col C: carrier/shipping method
-                    sheet.update_cell(i, 4, tracking_number) # col D: tracking number
                     print(f"Updated row {i}: Carrier: {carrier}, Tracking Number: {tracking_number}")
                 else:
                     print(f"Order not found for customer order number: {customer_order_number}")
             except Exception as e:
                 print(f"Error processing order {customer_order_number}: {str(e)}")
 
+        updated_data.append([carrier, tracking_number])
+    
+    end_row = len(rows)
+    range_str = f"C2:D{end_row}"
+    print(f"\nPerforming batch update to range {range_str} with {len(updated_data)} rows.")
+    sheet.update(range_str, updated_data)
+    print("Batch update complete!")
+
 def get_tracking():
     token = get_jwt()
     headers = {'Authorization': f'Bearer {token}'}
-
     sheet = setup_google_sheets()
     update_sheet_with_tracking(sheet, headers)
 
