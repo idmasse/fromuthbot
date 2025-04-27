@@ -38,8 +38,8 @@ def update_sheet_with_tracking(sheet, headers):
                 if order:
                     order_state = order.get("state", "")
                     if order_state.upper() == "CANCELLED":
-                        carrier = "cancelled"
-                        tracking_number = "cancelled"
+                        carrier = "CANCELLED"
+                        tracking_number = "CANCELLED"
                         print(f"Order {customer_order_number} is cancelled. Setting carrier and tracking to 'cancelled'")
                     else:
                         # For non-cancelled orders, process tracking numbers
