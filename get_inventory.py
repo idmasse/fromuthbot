@@ -20,7 +20,7 @@ def get_inventory_page(token, page_no=0, page_size=PAGE_SIZE):
         "Authorization": f"Bearer {token}"
     }
     
-    # filter: active = true and inventory >= 6
+    # filter: active = true and inventory >= 0
     params = {
         "select": "itemcode,sku,name,color,upc,size,sizeNum,ModelCode,GroupCode,active,description,brand,url,images,inventory,prices",
         "page_no": page_no,
@@ -159,7 +159,7 @@ def get_inventory():
     print("Authenticating with the API...")
     token = get_jwt()
     
-    print("Fetching all inventory pages for active items with inventory >= 6 units")
+    print("Fetching all inventory pages for active items with inventory >= 0 units")
     all_items = fetch_all_inventory(token)
     
     if not all_items:
