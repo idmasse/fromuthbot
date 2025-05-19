@@ -26,7 +26,7 @@ def place_order(po_num, order_data, headers):
     shipping_info = order_data['shipping_info']
     payload = {
         'customer_order_number': po_num,
-        'shipping_method': 1,
+        'shipping_method': 14,
         'shipping_address': {
             'fullname': f"{shipping_info['fname']} {shipping_info['lname']}",
             'line_1': shipping_info['address1'],
