@@ -3,6 +3,7 @@ import requests
 from utils.auth_utils import get_jwt, API_BASE_URL
 from utils.gsheet_utils import setup_google_sheets
 from dotenv import load_dotenv
+import sys
 
 load_dotenv()
 
@@ -92,4 +93,5 @@ def get_tracking():
     update_sheet_with_tracking(sheet, headers)
 
 if __name__ == '__main__':
-    get_tracking()
+    get_tracking_success = get_tracking()
+    sys.exit(0 if get_tracking_success else 1)
