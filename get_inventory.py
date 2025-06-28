@@ -184,6 +184,5 @@ def get_inventory():
         return
 
 if __name__ == "__main__":
-    get_inventory()
     get_inventory_success = get_inventory()
     sys.exit(0 if get_inventory_success else 1)
