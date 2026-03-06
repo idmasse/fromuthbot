@@ -1,6 +1,6 @@
 # Fromuth Order & Inventory Automation
 
-This repo contains a small automation suite that integrates with the Fromuth API, an FTP server, and Google Sheets to:
+This repo contains an automation suite that integrates with the Fromuth API, an FTP server, and Google Sheets to:
 
 - **Automatically download and process order CSVs** from an FTP drop.
 - **Place orders via the Fromuth API** and log results.
@@ -8,6 +8,8 @@ This repo contains a small automation suite that integrates with the Fromuth API
 - **Export inventory data to CSV** and upload it to FTP for downstream systems.
 
 The main entrypoint is `main.py`, which orchestrates the full end-to-end workflow.
+
+This automation was built as a method of integrating the proprietary ERP/ecom platform that the sports equipment distributor Fromuth uses with the dropshipping app Flip Shop.
 
 ---
 
@@ -21,7 +23,7 @@ The main entrypoint is `main.py`, which orchestrates the full end-to-end workflo
   - Groups CSV lines by PO number.
   - Calls the Fromuth API to place orders.
   - Skips orders that have already been placed.
-  - Records Flip PO → Fromuth order number mappings into a Google Sheet for tracking.
+  - Records Flip PO / Fromuth order number mappings into a Google Sheet for tracking.
 
 - **Tracking number sync**
   - Reads a Google Sheet of orders.
@@ -31,10 +33,10 @@ The main entrypoint is `main.py`, which orchestrates the full end-to-end workflo
 - **Inventory export**
   - Paginates through the API to fetch all active items with inventory ≥ 0.
   - Normalizes price structures and image URLs into a flat CSV.
-  - Uploads the resulting `inventory.csv` to an FTP folder (e.g. `/in/inventory`).
+  - Uploads the resulting `inventory.csv` to an FTP folder (`/in/inventory`).
 
 - **Email notifications**
-  - Sends email alerts on critical failures (e.g. auth issues, order processing errors).
+  - Sends email alerts on critical failures (auth issues, order processing errors).
   - Sends a summary email after each batch of order processing.
 
 - **Runs Scheduled by launchd**
